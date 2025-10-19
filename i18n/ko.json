@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "LR2BGA 변환기"
+  },
+  "tab": {
+    "basic": "기본",
+    "manual": "수동",
+    "settings": "환경 설정"
+  },
+  "checkbox": {
+    "lock": "잠금",
+    "mux_auto": "자동 조정"
+  },
+  "label": {
+    "input_path": "원본 파일 경로",
+    "output_dir": "출력 폴더 경로",
+    "output_name": "출력 파일명",
+    "resolution": "해상도",
+    "fps": "FPS",
+    "bitrate": "비트레이트",
+    "buffer_size": "버퍼사이즈",
+    "mux_rate": "MUX 레이트",
+    "estimated_size": "예상 파일 사이즈: {size}",
+    "language": "언어"
+  },
+  "tooltip": {
+    "output_name": "확장자를 제외한 파일명입니다.",
+    "resolution": "LR2SD는 256x256에서 동작하도록 설계되어있으나\n512x512까지도 정상 동작합니다.\nbeatoraja는 720p가 의도된 해상도입니다.",
+    "fps": "LR2SD에서 재생을 보장하기 위해서는 30fps를 사용해야합니다.",
+    "buffer": "적절한 버퍼사이즈를 사용해야 LR2에서 재생을 보장할 수 있습니다.",
+    "mux": "버퍼 언더플로우가 나지 않을 때까지 올리십시오.",
+    "mux_auto": "자동인 경우 입력한 MUX 레이트는 '시작값'으로 사용됩니다."
+  },
+  "button": {
+    "open": "열기",
+    "convert": "변환하기",
+    "stop": "중단하기"
+  },
+  "unit": {
+    "k": "k",
+    "x": "x"
+  },
+  "msg": {
+    "invalid_input": "입력 파일 경로 또는 출력 폴더 경로가 올바르지 않습니다!",
+    "searching_mux": "[#{itr}] 적절한 MUX 레이트를 찾는 중... ({mux}k)",
+    "working": "최종 파일 출력 중...",
+    "direct_running": "직접 명령 실행 중...",
+    "cancel_requested": "중단 요청… 정리 중",
+    "done": "변환 완료! (최종 파일 사이즈: {size})",
+    "done_nofs": "변환 완료!",
+    "done_nofs_underflow": "변환 완료! (언더플로우 발생!)",
+    "done_underflow": "변환 완료! (최종 파일 사이즈: {size}, 언더플로우 발생!)",
+    "fail": "변환 실패",
+    "fail_underflow": "변환 실패 (언더플로우 발생!)",
+    "empty": "",
+    "size_dash": "—"
+  }
+}

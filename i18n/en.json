@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "LR2BGA Converter"
+  },
+  "tab": {
+    "basic": "Basic",
+    "manual": "Manual",
+    "settings": "Preferences"
+  },
+  "checkbox": {
+    "lock": "Lock",
+    "mux_auto": "Auto Adjust"
+  },
+  "label": {
+    "input_path": "Input file path",
+    "output_dir": "Output folder path",
+    "output_name": "Output file name",
+    "resolution": "Resolution",
+    "fps": "FPS",
+    "bitrate": "Bitrate",
+    "buffer_size": "Buffer size",
+    "mux_rate": "MUX rate",
+    "estimated_size": "Estimated file size: {size}",
+    "language": "Language"
+  },
+  "tooltip": {
+    "output_name": "The file name without an extension.",
+    "resolution": "LR2SD is designed to run at 256x256, but it also works fine up to 512x512.\nbeatoraja’s intended resolution is 720p.",
+    "fps": "Use 30 fps to ensure playback on LR2SD.",
+    "buffer": "An appropriate buffer size is required to ensure playback on LR2.",
+    "mux": "Increase it until no buffer underflow occurs.",
+    "mux_auto": "When enabled, the entered MUX rate is used as the starting value."
+  },
+  "button": {
+    "open": "Open",
+    "convert": "Convert",
+    "stop": "Stop"
+  },
+  "unit": {
+    "k": "k",
+    "x": "x"
+  },
+  "msg": {
+    "invalid_input": "Input file path or output folder path is invalid!",
+    "searching_mux": "[#{itr}] Searching for a suitable MUX rate... ({mux}k)",
+    "working": "Writing final file...",
+    "direct_running": "Running custom command...",
+    "cancel_requested": "Cancel requested… cleaning up",
+    "done": "Conversion complete! (Final file size: {size})",
+    "done_nofs": "Conversion complete!",
+    "done_nofs_underflow": "Conversion complete! (Underflow occurred!)",
+    "done_underflow": "Conversion complete! (Final file size: {size}, underflow occurred!)",
+    "fail": "Conversion failed",
+    "fail_underflow": "Conversion failed (underflow occurred!)",
+    "empty": "",
+    "size_dash": "—"
+  }
+}

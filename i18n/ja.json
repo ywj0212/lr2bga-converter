@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "LR2BGA コンバーター"
+  },
+  "tab": {
+    "basic": "基本",
+    "manual": "手動",
+    "settings": "環境設定"
+  },
+  "checkbox": {
+    "lock": "ロック",
+    "mux_auto": "自動調整"
+  },
+  "label": {
+    "input_path": "入力ファイルのパス",
+    "output_dir": "出力フォルダのパス",
+    "output_name": "出力ファイル名",
+    "resolution": "解像度",
+    "fps": "FPS",
+    "bitrate": "ビットレート",
+    "buffer_size": "バッファサイズ",
+    "mux_rate": "MUX レート",
+    "estimated_size": "予想ファイルサイズ: {size}",
+    "language": "言語"
+  },
+  "tooltip": {
+    "output_name": "拡張子を除いたファイル名です。",
+    "resolution": "LR2SD は 256x256 で動作するよう設計されていますが、512x512 までは正常に動作します。\nbeatoraja の想定解像度は 720p です。",
+    "fps": "LR2SD での再生を保証するには 30fps を使用してください。",
+    "buffer": "LR2 での再生を保証するには、適切なバッファサイズを使用する必要があります。",
+    "mux": "バッファアンダーフローが発生しない値まで上げてください。",
+    "mux_auto": "自動の場合、入力した MUX レートは「開始値」として使用されます。"
+  },
+  "button": {
+    "open": "開く",
+    "convert": "変換",
+    "stop": "中断"
+  },
+  "unit": {
+    "k": "k",
+    "x": "x"
+  },
+  "msg": {
+    "invalid_input": "入力ファイルのパスまたは出力フォルダのパスが正しくありません！",
+    "searching_mux": "[#{itr}] 適切な MUX レートを探索中… ({mux}k)",
+    "working": "最終ファイルを出力中...",
+    "direct_running": "直接コマンドを実行中...",
+    "cancel_requested": "中断リクエスト… クリーンアップ中",
+    "done": "変換完了！(最終ファイルサイズ: {size})",
+    "done_nofs": "変換完了！",
+    "done_nofs_underflow": "変換完了！(アンダーフロー発生！)",
+    "done_underflow": "変換完了！(最終ファイルサイズ: {size}、アンダーフロー発生！)",
+    "fail": "変換に失敗しました",
+    "fail_underflow": "変換に失敗しました（アンダーフロー発生！）",
+    "empty": "",
+    "size_dash": "—"
+  }
+}
