@@ -27,8 +27,6 @@ def init():
       with dpg.table_row():
         p("", tag="service_msg_text2", color=(255, 255, 0, 255))
         dpg.add_button(label=i18n.t("button.convert"), width=-1, tag="convert_btn2", callback=run_convert_custom)
-        i18n.bind_label("convert_btn2", "button.open")
-        # convert_btn2도 런타임 라벨 변경 가능성이 있으므로 바인딩 생략(필요시 동적 코드에서 i18n.t() 사용)
 
     dpg.add_separator()
 

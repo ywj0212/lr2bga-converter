@@ -152,11 +152,7 @@ def init():
       dpg.add_table_column(width_fixed=True, init_width_or_weight=120)
       with dpg.table_row():
         p("", tag="service_msg_text", color=(255, 255, 0, 255))
-        # 변환 버튼은 런타임에 "중단하기"로 바뀌므로 i18n 바인딩은 여기서 생략(동적 라벨 충돌 방지)
         dpg.add_button(label=i18n.t("button.convert"), width=-1, tag="convert_btn1", callback=run_convert)
-        i18n.bind_label("convert_btn1", "button.open")
-        
-        # 필요하다면 set_convert_buttons_active() 내부에서 i18n.t() 사용하도록 수정
 
     dpg.add_separator()
 
