@@ -2,13 +2,13 @@
 import dearpygui.dearpygui as dpg
 import os, tempfile, re, subprocess, threading, signal
 
-from env import IS_WINDOWS, get_ffmpeg_path, get_ffprobe_path
-from states import global_state
-from cmdline import build_ffmpeg_args, ffprobe_duration_sec, quant50_up, \
+from src.env import IS_WINDOWS, get_ffmpeg_path, get_ffprobe_path
+from src.states import global_state
+from src.cmdline import build_ffmpeg_args, ffprobe_duration_sec, quant50_up, \
      update_command
 
-import ui_map
-from util import bytes_to_human
+import src.ui_map as ui_map
+from src.util import bytes_to_human
 
 # ★ 모듈 전역 상태 (여기에서 선언)
 current_proc = None

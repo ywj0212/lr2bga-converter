@@ -1,7 +1,7 @@
-from config import get_lang_pref, set_lang_pref
-from ui_setup import setup
-from ui import init_ui
-import i18n
+from src.config import get_lang_pref, set_lang_pref
+from src.ui_setup import setup
+from src.ui import init_ui
+import src.i18n as i18n
 
 if __name__=="__main__":
   pref = get_lang_pref()

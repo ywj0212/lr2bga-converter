@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import os
-from env import IS_MAC, resource_path
+from src.env import IS_MAC, resource_path
 
 CJK_FONT_BOLD_PATH    = resource_path("fonts/PretendardJP-Bold.otf")
 CJK_FONT_REGULAR_PATH = resource_path("fonts/PretendardJP-Regular.otf")
@@ -15,7 +15,7 @@ PHY_EM_SIZE     = 21
 GLOBAL_SCALE    = (PHY_EM_SIZE/VIR_EM_SIZE)
 
 # KS X 1001 완성형 한글 2,350자 유니코드 구간 & 일본어 문자 세트
-from codepoints import KSX1001_HANGUL_RANGES, JAPANESE_MIN_RANGES
+from src.codepoints import KSX1001_HANGUL_RANGES, JAPANESE_MIN_RANGES
 
 def setup():
   dpg.create_context()

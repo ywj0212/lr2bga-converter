@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
-from util import nfc
-from convert import run_convert, run_convert_custom, cancel_encoding
-import i18n
+from src.util import nfc
+from src.convert import run_convert, run_convert_custom, cancel_encoding
+from src import i18n
 
 def log_clear():
   dpg.set_value("ffmpeg_log", "")

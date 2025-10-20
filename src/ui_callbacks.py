@@ -1,10 +1,10 @@
 import dearpygui.dearpygui as dpg
 
-from states import set_state
-from ui_components import apply_lock_pair
-from cmdline import update_command
-from cmdline import update_estimated_size
-import i18n
+from src.states import set_state
+from src.ui_components import apply_lock_pair
+from src.cmdline import update_command
+from src.cmdline import update_estimated_size
+from src import i18n
 
 def on_custom_width(sender, app_data):
   set_state("width", int(app_data))

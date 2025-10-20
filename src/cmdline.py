@@ -1,10 +1,10 @@
 import dearpygui.dearpygui as dpg
 import os, subprocess, re, math
 
-from states import get_state, set_update_callback, ffmpeg_cmd
-from env import path_native, get_ffmpeg_path, get_ffprobe_path
-from util import nfc, bytes_to_human
-import i18n
+from src.states import get_state, set_update_callback, ffmpeg_cmd
+from src.env import path_native, get_ffmpeg_path, get_ffprobe_path
+from src.util import nfc, bytes_to_human
+from src import i18n
 
 def ffprobe_duration_sec(path: str) -> float:
   if not path or not os.path.exists(path):

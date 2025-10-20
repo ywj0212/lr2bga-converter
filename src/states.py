@@ -20,13 +20,13 @@ global_state = {
 ffmpeg_cmd = "";
 
 def set_update_callback(cb: Callable[[], None]) -> None:
-    global _on_change
-    _on_change = cb
+  global _on_change
+  _on_change = cb
 
 def get_state() -> Dict[str, Any]:
-    return global_state
+  return global_state
 
 def set_state(key: str, value: Any) -> None:
-    global_state[key] = value
-    if _on_change:
-        _on_change()  # 인자 없이 호출
+  global_state[key] = value
+  if _on_change:
+    _on_change()  # 인자 없이 호출

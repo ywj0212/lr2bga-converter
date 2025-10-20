@@ -1,7 +1,7 @@
 # config.py
 import json, os
 from pathlib import Path
-from env import IS_WINDOWS, IS_MAC
+from src.env import IS_WINDOWS, IS_MAC
 
 def user_config_dir() -> Path:
     if IS_WINDOWS:
