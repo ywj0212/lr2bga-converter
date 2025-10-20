@@ -54,5 +54,15 @@
     "fail_underflow": "Conversion failed (underflow occurred!)",
     "empty": "",
     "size_dash": "—"
+  },
+  "about": {
+    "title": "LR2 BMS BGA Converter",
+    "desc": "A simple tool to convert videos to MPEG-1 (YUV420p, 30fps, CFR) optimized for LR2.",
+    "license": "License",
+    "license_program": "GNU General Public License v3.0",
+    "license_notice_title": "Bundled / used libraries:",
+    "license_notice": "• ffmpeg / ffprobe — GNU General Public License v2.0\n• Dear PyGui — MIT License\n• Fonts\n  • PretendardJP — SIL Open Font License\n  • D2Coding — Open Font License (OFL)",
+    "github": "GitHub: https://github.com/ywj0212/lr2bga-converter",
+    "version": "Version: v1.0.0"
   }
 }

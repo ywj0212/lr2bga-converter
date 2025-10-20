@@ -28,8 +28,8 @@ def setup():
       raise FileNotFoundError("필요한 폰트가 존재하지 않습니다.")
     
     fonts = [
-      # { "tag": "h1",   "path": CJK_FONT_BOLD_PATH,    "size": H1_SIZE, "range": "compact" },
-      # { "tag": "h2",   "path": CJK_FONT_BOLD_PATH,    "size": H2_SIZE, "range": "compact" },
+      { "tag": "h1",   "path": CJK_FONT_BOLD_PATH,    "size": H1_SIZE, "range": "compact" },
+      { "tag": "h2",   "path": CJK_FONT_BOLD_PATH,    "size": H2_SIZE, "range": "compact" },
       { "tag": "p",    "path": CJK_FONT_REGULAR_PATH, "size": P_SIZE,  "range": "full" },
       { "tag": "mono", "path": MONO_FONT_PATH,        "size": SM_SIZE, "range": "full" },
     ]

@@ -54,5 +54,15 @@
     "fail_underflow": "변환 실패 (언더플로우 발생!)",
     "empty": "",
     "size_dash": "—"
+  },
+  "about": {
+    "title": "LR2 BMS 구동기 용 BGA 변환기",
+    "desc": "LR2 환경에 맞게 영상을 MPEG-1(YUV420p, 30fps, CFR)로 손쉽게 변환하는 툴입니다.",
+    "license": "라이선스",
+    "license_program": "GNU General Public License v3.0",
+    "license_notice_title": "동봉 또는 사용 라이브러리 고지:",
+    "license_notice": "• ffmpeg / ffprobe - GNU General Public License v2.0\n• Dear PyGui - MIT License\n• Fonts\n  • PretendardJP - SIL Open Font License\n  • D2Coding - OFL(Open Font License)",
+    "github": "GitHub: https://github.com/ywj0212/lr2bga-converter",
+    "version": "Version: v1.0.0"
   }
 }
