@@ -18,6 +18,7 @@ global_state = {
   "auto_max_attempts": 0
 }
 ffmpeg_cmd = "";
+_on_change: Optional[Callable[[], None]] = None
 
 def set_update_callback(cb: Callable[[], None]) -> None:
   global _on_change
@@ -28,5 +29,5 @@ def get_state() -> Dict[str, Any]:
 
 def set_state(key: str, value: Any) -> None:
   global_state[key] = value
-  if _on_change:
-    _on_change()  # 인자 없이 호출
+  if _on_change is not None:
+    _on_change()
