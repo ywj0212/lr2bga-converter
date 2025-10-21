@@ -55,7 +55,8 @@
     "res_preset_items": [
       "256x256", "512x512", "640x480", "1280x720", "720p", "1080p", "Custom"
     ],
-    "codec_items": ["MPEG1", "H.264"]
+    "codec_items": ["MPEG1", "H.264"],
+    "letterbox_items": ["Black bars", "Solid color", "Blurred background"]
   },
   "msg": {
     "invalid_input": "Input file path or output folder path is invalid!",

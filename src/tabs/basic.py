@@ -199,23 +199,25 @@ def init():
         i18n.bind_label("buf_lock", "checkbox.lock")
 
       with dpg.table_row():
-        with dpg.group(horizontal=True):
-          p("label.mux_rate")
-          p("(?)", color=(150,150,150))
-          with dpg.tooltip(dpg.last_item()):
+        with dpg.group(horizontal=True, tag="mux_label_group"):
+          p("label.mux_rate", tag="mux_label_text")
+          p("(?)", color=(150,150,150), tag="mux_label_help")
+          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_container"):
             p("tooltip.mux", tag="tooltip_mux_text")
+        with dpg.tooltip("mux_label_group", tag="tooltip_mux_disabled", show=False):
+          p("tooltip.mux_disabled", tag="tooltip_mux_disabled_text")
 
         with dpg.group(horizontal=True):
           dpg.add_input_int(tag="mux_input", default_value=2100, width=130, step=50, min_value=1, min_clamped=True,
                             callback=on_int_value("mux_k", "mux_input"))
           p("k", tag="mux_unit_text")
-        with dpg.group(horizontal=True):  
+        with dpg.group(horizontal=True):
           dpg.add_checkbox(tag="mux_auto_chk",
                             label=i18n.t("checkbox.mux_auto"),
                             default_value=True,
                             callback=lambda s,a: set_state("mux_auto", bool(a)))
           i18n.bind_label("mux_auto_chk", "checkbox.mux_auto")
-          with dpg.tooltip(dpg.last_item()):
+          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_auto_container"):
             p("tooltip.mux_auto", tag="tooltip_mux_auto_text")
     
       with dpg.table_row(height=20):

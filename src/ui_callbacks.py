@@ -36,21 +36,31 @@ def _label_to_letterbox_mode(label: str) -> str:
 def get_letterbox_mode_label(mode: str | None = None) -> str:
   return _letterbox_mode_to_label(mode)
 
+def _sanitize_letterbox_color(raw) -> tuple[int, int, int]:
+  if not isinstance(raw, (list, tuple)):
+    raw = (0, 0, 0)
+  comps: list[float] = []
+  for idx in range(3):
+    try:
+      comps.append(float(raw[idx]))
+    except Exception:
+      comps.append(0.0)
+  max_val = max(comps) if comps else 0.0
+  scale = 255.0 if max_val <= 1.0001 else 1.0
+  result: list[int] = []
+  for value in comps:
+    try:
+      scaled = value * scale if scale == 255.0 else value
+    except Exception:
+      scaled = 0.0
+    result.append(max(0, min(255, int(round(scaled)))))
+  while len(result) < 3:
+    result.append(0)
+  return (result[0], result[1], result[2])
+
 def _letterbox_color_vec() -> list[int]:
-  raw = get_state().get("letterbox_color", (0, 0, 0))
-  if isinstance(raw, (list, tuple)) and len(raw) >= 3:
-    try:
-      r, g, b = raw[:3]
-    except Exception:
-      r = g = b = 0
-  else:
-    r = g = b = 0
-  def _clamp(v):
-    try:
-      return max(0, min(255, int(round(v))))
-    except Exception:
-      return 0
-  return [_clamp(r), _clamp(g), _clamp(b), 255]
+  r, g, b = _sanitize_letterbox_color(get_state().get("letterbox_color", (0, 0, 0)))
+  return [r, g, b, 255]
 
 def refresh_letterbox_controls():
   state = get_state()
@@ -76,7 +86,6 @@ def refresh_letterbox_controls():
 
   if dpg.does_item_exist("letterbox_extra_group"):
     dpg.configure_item("letterbox_extra_group", show=enabled)
-    dpg.bind_item_theme("letterbox_extra_group", 0 if enabled else "theme_locked_text")
 
   color_vec = _letterbox_color_vec()
   show_color = enabled and mode == "solid"
@@ -132,15 +141,7 @@ def on_letterbox_mode(sender, app_data):
 def on_letterbox_color(sender, app_data):
   if not isinstance(app_data, (list, tuple)) or len(app_data) < 3:
     return
-  try:
-    r, g, b = app_data[:3]
-    color = (
-      max(0, min(255, int(round(r)))),
-      max(0, min(255, int(round(g)))),
-      max(0, min(255, int(round(b)))),
-    )
-  except Exception:
-    color = (0, 0, 0)
+  color = _sanitize_letterbox_color(app_data)
   set_state("letterbox_color", color)
   update_command()
 

@@ -28,17 +28,26 @@ def is_letterbox_needed(state) -> bool:
 
 def _normalize_letterbox_color(state) -> tuple[int, int, int]:
   raw = state.get("letterbox_color", (0, 0, 0))
-  if isinstance(raw, (list, tuple)) and len(raw) >= 3:
+  if not isinstance(raw, (list, tuple)):
+    raw = (0, 0, 0)
+  comps: list[float] = []
+  for idx in range(3):
     try:
-      r, g, b = raw[:3]
-      return (
-        max(0, min(255, int(round(r)))),
-        max(0, min(255, int(round(g)))),
-        max(0, min(255, int(round(b))))
-      )
+      comps.append(float(raw[idx]))
     except Exception:
-      pass
-  return (0, 0, 0)
+      comps.append(0.0)
+  max_val = max(comps) if comps else 0.0
+  scale = 255.0 if max_val <= 1.0001 else 1.0
+  result: list[int] = []
+  for value in comps:
+    try:
+      scaled = value * scale if scale == 255.0 else value
+    except Exception:
+      scaled = 0.0
+    result.append(max(0, min(255, int(round(scaled)))))
+  while len(result) < 3:
+    result.append(0)
+  return (result[0], result[1], result[2])
 
 
 def ffprobe_duration_sec(path: str) -> float:
@@ -162,14 +171,15 @@ def update_command():
   container = "mp4" if use_h264 else "mpeg"
   outpath = path_native(os.path.join(outdir, f"{outname}.{ext}"))
 
-  vf = f'scale={w}:{h}:force_original_aspect_ratio=decrease,' \
-       f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}'
+  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
   lines = [
     f'{os.path.basename(get_ffmpeg_path())} -hide_banner -y -fflags +genpts \\\n',
     f'  -i "{inpath}" \\\n',
-    f'  -filter:v "{vf}" \\\n',
-    f'  -r {fps} -fps_mode cfr \\\n',
+    f'  -{filter_type} "{filter_expr}" \\\n',
   ]
+  if map_output:
+    lines.append(f'  -map {map_output} \\\n')
+  lines.append(f'  -r {fps} -fps_mode cfr \\\n')
   if use_h264:
     lines.append('  -c:v libx264 -pix_fmt yuv420p \\\n')
   else:
@@ -271,18 +281,18 @@ def build_ffmpeg_args(*, override_mux_k: int | None = None, override_outpath: st
   ext = "mp4" if use_h264 else "mpg"
   outpath = override_outpath if override_outpath else os.path.join(outdir if outdir else ".", f"{outname}.{ext}")
 
-  vf = f"scale={w}:{h}:force_original_aspect_ratio=decrease," \
-       f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}"
-
   args = [
     get_ffmpeg_path(), "-hide_banner", "-y", "-fflags", "+genpts",
     "-i", path_native(inpath) if inpath else "IN.MP4",
-    "-filter:v", vf,
-    "-r", str(fps), "-fps_mode", "cfr",
-    "-c:v", "libx264" if use_h264 else "mpeg1video", "-pix_fmt", "yuv420p",
-    "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
-    "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k",
   ]
+  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
+  args.extend([f"-{filter_type}", filter_expr])
+  if map_output:
+    args.extend(["-map", map_output])
+  args.extend(["-r", str(fps), "-fps_mode", "cfr",
+               "-c:v", "libx264" if use_h264 else "mpeg1video", "-pix_fmt", "yuv420p",
+               "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
+               "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k"])
   if use_h264:
     args.extend([
       "-movflags", "+faststart",
