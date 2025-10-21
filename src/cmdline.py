@@ -27,26 +27,17 @@ def is_letterbox_needed(state) -> bool:
 
 def _normalize_letterbox_color(state) -> tuple[int, int, int]:
   raw = state.get("letterbox_color", (0, 0, 0))
-  if not isinstance(raw, (list, tuple)):
-    raw = (0, 0, 0)
-  comps: list[float] = []
-  for idx in range(3):
+  if isinstance(raw, (list, tuple)) and len(raw) >= 3:
     try:
-      comps.append(float(raw[idx]))
+      r, g, b = raw[:3]
+      return (
+        max(0, min(255, int(round(r)))),
+        max(0, min(255, int(round(g)))),
+        max(0, min(255, int(round(b))))
+      )
     except Exception:
-      comps.append(0.0)
-  max_val = max(comps) if comps else 0.0
-  scale = 255.0 if max_val <= 1.0001 else 1.0
-  result: list[int] = []
-  for value in comps:
-    try:
-      scaled = value * scale if scale == 255.0 else value
-    except Exception:
-      scaled = 0.0
-    result.append(max(0, min(255, int(round(scaled)))))
-  while len(result) < 3:
-    result.append(0)
-  return (result[0], result[1], result[2])
+      pass
+  return (0, 0, 0)
 
 def _build_letterbox_filter(state, fps: float) -> tuple[str, str, str | None]:
   w = int(state.get("width", 0))

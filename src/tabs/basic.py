@@ -116,7 +116,6 @@ def init():
             default_value=(0, 0, 0, 255),
             no_alpha=True,
             width=-1,
-            input_mode=dpg.mvColorEdit_input_int,
             show=False,
             callback=on_letterbox_color,
           )
