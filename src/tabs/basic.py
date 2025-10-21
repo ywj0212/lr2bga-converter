@@ -262,8 +262,7 @@ def init():
                       tracked=True)
     dpg.bind_item_font(dpg.last_item(), "mono")
     
-    dpg.set_value("w_display", "512")
-  
+  dpg.set_value("w_display", "512")
   dpg.set_value("h_display", "512")
   apply_lock_pair("w_custom", "w_display", True)
   apply_lock_pair("h_custom", "h_display", True)

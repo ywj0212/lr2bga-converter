@@ -7,10 +7,10 @@ CJK_FONT_REGULAR_PATH = resource_path("fonts/PretendardJP-Regular.otf")
 MONO_FONT_PATH        = resource_path("fonts/D2Coding-Ver1.3.2-20180524.ttf")
 
 VIR_EM_SIZE     = 30 if IS_MAC else 25
-H1_SIZE         = int(1.4 * VIR_EM_SIZE)
-H2_SIZE         = int(1.2 * VIR_EM_SIZE)
-P_SIZE          = int(1.0 * VIR_EM_SIZE)
-SM_SIZE         = int(0.6 * VIR_EM_SIZE)
+H1_SIZE         = int(1.40 * VIR_EM_SIZE)
+H2_SIZE         = int(1.20 * VIR_EM_SIZE)
+P_SIZE          = int(1.00 * VIR_EM_SIZE)
+SM_SIZE         = int(0.75 * VIR_EM_SIZE)
 PHY_EM_SIZE     = 21
 GLOBAL_SCALE    = (PHY_EM_SIZE/VIR_EM_SIZE)
 
@@ -69,7 +69,27 @@ def setup():
   with dpg.theme(tag="theme_locked_text"):
     with dpg.theme_component(dpg.mvAll):
       dpg.add_theme_style(dpg.mvStyleVar_Alpha, 0.45, category=dpg.mvThemeCat_Core)
+      dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextSelectedBg, (80, 80, 80, 255))
     with dpg.theme_component(dpg.mvText):
       dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextSelectedBg, (80, 80, 80, 255))
     with dpg.theme_component(dpg.mvCheckbox):
       dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_CheckMark, (120, 120, 120, 255))
+    with dpg.theme_component(dpg.mvAll, enabled_state=False):
+      dpg.add_theme_style(dpg.mvStyleVar_Alpha, 0.45, category=dpg.mvThemeCat_Core)
+      dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextSelectedBg, (80, 80, 80, 255))
+    with dpg.theme_component(dpg.mvText, enabled_state=False):
+      dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextSelectedBg, (80, 80, 80, 255))
+    with dpg.theme_component(dpg.mvCheckbox, enabled_state=False):
+      dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_TextDisabled, (150, 150, 150, 255))
+      dpg.add_theme_color(dpg.mvThemeCol_CheckMark, (120, 120, 120, 255))

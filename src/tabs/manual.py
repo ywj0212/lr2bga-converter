@@ -7,16 +7,13 @@ def init():
   with dpg.tab(label=i18n.t("tab.manual"), tag="tab_manual"):
     i18n.bind_label("tab_manual", "tab.manual")
 
-    with dpg.child_window(tag="cmd_preview_wrap",
-                          autosize_x=True, height=420,
-                          horizontal_scrollbar=True, border=False):
-      dpg.add_input_text(tag="cmd_preview",
-                        multiline=True,
-                        width=1920,
-                        height=-1,
-                        no_horizontal_scroll=True,
-                        tab_input=True,
-                        callback=lambda s, a: None)
+    dpg.add_input_text(tag="cmd_preview",
+                      multiline=True,
+                      width=-1,
+                      height=420,
+                      tab_input=True,
+                      callback=lambda s, a: None)
+    dpg.bind_item_font("cmd_preview", "mono")
     with dpg.table(header_row=False, policy=dpg.mvTable_SizingStretchProp):
       dpg.add_table_column(init_width_or_weight=1)
       dpg.add_table_column(width_fixed=True, init_width_or_weight=140)

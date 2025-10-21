@@ -39,8 +39,8 @@
     "letterbox": "Choose how to fill the letterbox area\nwhen the source and target aspect ratios differ.",
     "letterbox_disabled": "Aspect ratios match;\nno letterbox processing is required.",
     "letterbox_color": "Select the solid color used for the letterbox area.",
-    "letterbox_blur": "Adjusts the blur radius of the background (4–120). Higher values produce a softer background.",
-    "letterbox_blur_brightness": "Adjusts the brightness of the blurred background (20%–100%). Lower values make it darker."
+    "letterbox_blur": "Adjusts the blur radius of the background(4–120px).\nHigher values produce a softer background.",
+    "letterbox_blur_brightness": "Adjusts the brightness of the blurred background(20%–100%).\nLower values make it darker."
   },
   "button": {
     "open": "Open",

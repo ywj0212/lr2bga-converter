@@ -1,12 +1,13 @@
 import dearpygui.dearpygui as dpg
-import os, subprocess, re, math
+import os, subprocess, re, math, json
+from typing import Tuple
 
 from src.states import get_state, set_update_callback, ffmpeg_cmd
 from src.env import path_native, get_ffmpeg_path, get_ffprobe_path
 from src.util import nfc, bytes_to_human
 from src import i18n
 
-LETTERBOX_TOLERANCE_PX = 2
+LETTERBOX_TOLERANCE_PX = 5
 
 def is_letterbox_needed(state) -> bool:
   try:
@@ -39,56 +40,6 @@ def _normalize_letterbox_color(state) -> tuple[int, int, int]:
       pass
   return (0, 0, 0)
 
-def _build_letterbox_filter(state, fps: float) -> tuple[str, str, str | None]:
-  w = int(state.get("width", 0))
-  h = int(state.get("height", 0))
-  if w <= 0 or h <= 0:
-    return ("filter:v", f'scale={w}:{h},setsar=1,fps={fps}', None)
-
-  if not is_letterbox_needed(state):
-    vf = f'scale={w}:{h},setsar=1,fps={fps}'
-    return ("filter:v", vf, None)
-
-  mode = str(state.get("letterbox_mode", "black") or "black").lower()
-  if mode == "blur":
-    radius = state.get("letterbox_blur_radius", 20)
-    try:
-      radius = int(radius)
-    except Exception:
-      radius = 20
-    radius = max(4, min(120, radius))
-    brightness = state.get("letterbox_blur_brightness", 100)
-    try:
-      brightness = int(brightness)
-    except Exception:
-      brightness = 100
-    brightness = max(20, min(100, brightness))
-    brightness_factor = brightness / 100.0
-    brightness_filter = ""
-    if brightness < 100:
-      brightness_expr = f"{brightness_factor:.3f}".rstrip("0").rstrip(".")
-      if not brightness_expr:
-        brightness_expr = "1"
-      brightness_filter = f",lutyuv=y='val*{brightness_expr}':u=val:v=val"
-    vf = (
-      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,'
-      f'crop={w}:{h}:(iw-ow)/2:(ih-oh)/2,boxblur={radius}{brightness_filter}[lb_bg];'
-      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=decrease[lb_fg];'
-      f'[lb_bg][lb_fg]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2,'
-      f'setsar=1,fps={fps}[vout]'
-    )
-    return ("filter_complex", vf, "[vout]")
-
-  pad = f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2'
-  if mode == "solid":
-    r, g, b = _normalize_letterbox_color(state)
-    pad = f'{pad}:color=0x{r:02x}{g:02x}{b:02x}'
-
-  vf = (
-    f'scale={w}:{h}:force_original_aspect_ratio=decrease,'
-    f'{pad},setsar=1,fps={fps}'
-  )
-  return ("filter:v", vf, None)
 
 def ffprobe_duration_sec(path: str) -> float:
   if not path or not os.path.exists(path):
@@ -105,28 +56,67 @@ def ffprobe_duration_sec(path: str) -> float:
     return float(out) if out else 0.0
   except Exception:
     return 0.0
+def ffprobe_video_resolution(path: str) -> Tuple[int, int]:
+    if not path or not os.path.exists(path):
+        return (0, 0)
 
-def ffprobe_video_resolution(path: str) -> tuple[int, int]:
-  if not path or not os.path.exists(path):
+    def _run(cmd: list[str]) -> str:
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True).strip()
+
+    ffprobe = get_ffprobe_path()
+
+    # 1) 빠른 경로: stream-level width/height (+probe/analyze 증대)
+    try:
+        cmd1 = [
+            ffprobe,
+            "-v", "error",
+            "-probesize", "50M",
+            "-analyzeduration", "50M",
+            "-select_streams", "v:0",
+            "-show_entries", "stream=codec_type,width,height,coded_width,coded_height",
+            "-of", "json",
+            path_native(path),
+        ]
+        data = json.loads(_run(cmd1))
+        streams = data.get("streams", [])
+        for st in streams:
+            if st.get("codec_type") != "video":
+                continue
+            w = int(st.get("width") or 0)
+            h = int(st.get("height") or 0)
+            if w > 0 and h > 0:
+                return (w, h)
+            # fallback to coded_* if display size가 비어있을 때
+            cw = int(st.get("coded_width") or 0)
+            ch = int(st.get("coded_height") or 0)
+            if cw > 0 and ch > 0:
+                return (cw, ch)
+    except Exception:
+        pass
+
+    # 2) 최후 수단: 첫 프레임을 살짝 디코드해서 frame-level width/height 얻기
+    #   -read_intervals %+#1 : 첫 구간 1프레임만
+    try:
+        cmd2 = [
+            ffprobe,
+            "-v", "error",
+            "-read_intervals", "%+#1",
+            "-select_streams", "v:0",
+            "-show_entries", "frame=width,height",
+            "-of", "csv=p=0:s=x",
+            path_native(path),
+        ]
+        out = _run(cmd2)
+        # 예: "720x480" (여러 줄일 수 있으므로 첫 줄만)
+        if out:
+            line = out.splitlines()[0].strip()
+            if "x" in line:
+                w_str, h_str = line.split("x", 1)
+                return (int(float(w_str)), int(float(h_str)))
+    except Exception:
+        pass
+
     return (0, 0)
-  try:
-    cmd = [
-      get_ffprobe_path(),
-      "-v", "error",
-      "-select_streams", "v:0",
-      "-show_entries", "stream=width,height",
-      "-of", "csv=p=0:s=x",
-      path_native(path),
-    ]
-    out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True).strip()
-    if not out:
-      return (0, 0)
-    if "x" in out:
-      w_str, h_str = out.split("x", 1)
-      return (int(float(w_str)), int(float(h_str)))
-  except Exception:
-    return (0, 0)
-  return (0, 0)
 
 def _fmt_estimated_size_value() -> str:
   """'{size}' 치환값을 동적으로 계산해 반환."""
@@ -146,7 +136,6 @@ def estimate_output_size_bytes() -> int | None:
   # ffmpeg의 k는 1000 기준
   bytes_est = int((eff_kbps * 1000 / 8.0) * dur)
   return max(0, bytes_est)
-
 def update_estimated_size():
   if not dpg.does_item_exist("est_size_text"):
       return
@@ -154,6 +143,7 @@ def update_estimated_size():
   txt = i18n.t("label.estimated_size", size=_fmt_estimated_size_value())
   dpg.set_value("est_size_text", txt)
 i18n.on_change(lambda _lang: update_estimated_size())
+
 def update_command():
   state = get_state()
   global ffmpeg_cmd
@@ -212,6 +202,56 @@ def _sanitize_cmdline(s: str) -> str:
   s = re.sub(r"[\\^]\s*\n", " ", s)
   s = s.replace("\n", " ")
   return s.strip()
+def _build_letterbox_filter(state, fps: float) -> tuple[str, str, str | None]:
+  w = int(state.get("width", 0))
+  h = int(state.get("height", 0))
+  if w <= 0 or h <= 0:
+    return ("filter:v", f'scale={w}:{h},setsar=1,fps={fps}', None)
+
+  if not is_letterbox_needed(state):
+    vf = f'scale={w}:{h},setsar=1,fps={fps}'
+    return ("filter:v", vf, None)
+
+  mode = str(state.get("letterbox_mode", "black") or "black").lower()
+  if mode == "blur":
+    radius = state.get("letterbox_blur_radius", 20)
+    try:
+      radius = int(radius)
+    except Exception:
+      radius = 20
+    radius = max(4, min(120, radius))
+    brightness = state.get("letterbox_blur_brightness", 100)
+    try:
+      brightness = int(brightness)
+    except Exception:
+      brightness = 100
+    brightness = max(20, min(100, brightness))
+    brightness_factor = brightness / 100.0
+    brightness_filter = ""
+    if brightness < 100:
+      brightness_expr = f"{brightness_factor:.3f}".rstrip("0").rstrip(".")
+      if not brightness_expr:
+        brightness_expr = "1"
+      brightness_filter = f",lutyuv=y='val*{brightness_expr}':u=val:v=val"
+    vf = (
+      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,'
+      f'crop={w}:{h}:(iw-ow)/2:(ih-oh)/2,boxblur={radius}{brightness_filter}[lb_bg];'
+      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=decrease[lb_fg];'
+      f'[lb_bg][lb_fg]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2,'
+      f'setsar=1,fps={fps}[vout]'
+    )
+    return ("filter_complex", vf, "[vout]")
+
+  pad = f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2'
+  if mode == "solid":
+    r, g, b = _normalize_letterbox_color(state)
+    pad = f'{pad}:color=0x{r:02x}{g:02x}{b:02x}'
+
+  vf = (
+    f'scale={w}:{h}:force_original_aspect_ratio=decrease,'
+    f'{pad},setsar=1,fps={fps}'
+  )
+  return ("filter:v", vf, None)
 def build_ffmpeg_args(*, override_mux_k: int | None = None, override_outpath: str | None = None) -> list[str]:
   state = get_state()
   w = state["width"]

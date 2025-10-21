@@ -62,8 +62,8 @@ def refresh_letterbox_controls():
 
   if dpg.does_item_exist("letterbox_combo"):
     dpg.set_value("letterbox_combo", label_value)
-    dpg.configure_item("letterbox_combo", enabled=enabled)
-    dpg.bind_item_theme("letterbox_combo", 0 if enabled else "theme_locked_text")
+    dpg.configure_item("letterbox_combo", show=enabled) # ? 콤보 박스에 테마 적용 시 전역 적용되는 문제가 있음.
+    # dpg.bind_item_theme("letterbox_combo", 0 if enabled else "theme_locked_text")
 
   for tag in ("letterbox_label", "letterbox_help", "letterbox_blur_radius_label", "letterbox_blur_brightness_label"):
     if dpg.does_item_exist(tag):
@@ -244,19 +244,12 @@ def on_codec_change(sender, app_data):
   set_state("codec", codec)
   use_h264 = (codec == "H.264")
 
-  targets = ("mux_input", "mux_auto_chk")
-  for item in targets:
-    if dpg.does_item_exist(item):
-      dpg.configure_item(item, enabled=not use_h264)
-      dpg.bind_item_theme(item, "theme_locked_text" if use_h264 else 0)
+  for tag in ("mux_input", "mux_auto_chk"):
+    if dpg.does_item_exist(tag):
+      dpg.configure_item(tag, enabled=not use_h264)
+      dpg.bind_item_theme(tag, "theme_locked_text" if use_h264 else 0)
 
-  if dpg.does_item_exist("mux_unit_text"):
-    if use_h264:
-      dpg.bind_item_theme("mux_unit_text", "theme_locked_text")
-    else:
-      dpg.bind_item_theme("mux_unit_text", 0)
-
-  for tag in ("mux_label_text", "mux_label_help"):
+  for tag in ("mux_label_text", "mux_label_help", "mux_unit_text"):
     if dpg.does_item_exist(tag):
       dpg.bind_item_theme(tag, "theme_locked_text" if use_h264 else 0)
 
