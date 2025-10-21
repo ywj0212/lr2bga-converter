@@ -57,9 +57,22 @@ def _build_letterbox_filter(state, fps: float) -> tuple[str, str, str | None]:
     except Exception:
       radius = 20
     radius = max(4, min(120, radius))
+    brightness = state.get("letterbox_blur_brightness", 100)
+    try:
+      brightness = int(brightness)
+    except Exception:
+      brightness = 100
+    brightness = max(20, min(100, brightness))
+    brightness_factor = brightness / 100.0
+    brightness_filter = ""
+    if brightness < 100:
+      brightness_expr = f"{brightness_factor:.3f}".rstrip("0").rstrip(".")
+      if not brightness_expr:
+        brightness_expr = "1"
+      brightness_filter = f",lutyuv=y='val*{brightness_expr}':u=val:v=val"
     vf = (
       f'[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,'
-      f'crop={w}:{h}:(iw-ow)/2:(ih-oh)/2,boxblur={radius}[lb_bg];'
+      f'crop={w}:{h}:(iw-ow)/2:(ih-oh)/2,boxblur={radius}{brightness_filter}[lb_bg];'
       f'[0:v]scale={w}:{h}:force_original_aspect_ratio=decrease[lb_fg];'
       f'[lb_bg][lb_fg]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2,'
       f'setsar=1,fps={fps}[vout]'

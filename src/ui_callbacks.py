@@ -65,10 +65,7 @@ def refresh_letterbox_controls():
     dpg.configure_item("letterbox_combo", enabled=enabled)
     dpg.bind_item_theme("letterbox_combo", 0 if enabled else "theme_locked_text")
 
-  if dpg.does_item_exist("letterbox_label_group"):
-    dpg.bind_item_theme("letterbox_label_group", 0 if enabled else "theme_locked_text")
-
-  for tag in ("letterbox_label", "letterbox_help"):
+  for tag in ("letterbox_label", "letterbox_help", "letterbox_blur_radius_label", "letterbox_blur_brightness_label"):
     if dpg.does_item_exist(tag):
       dpg.bind_item_theme(tag, 0 if enabled else "theme_locked_text")
 
@@ -83,6 +80,8 @@ def refresh_letterbox_controls():
 
   color_vec = _letterbox_color_vec()
   show_color = enabled and mode == "solid"
+  if dpg.does_item_exist("letterbox_color_group"):
+    dpg.configure_item("letterbox_color_group", show=show_color)
   if dpg.does_item_exist("letterbox_color_edit"):
     dpg.configure_item("letterbox_color_edit", show=show_color, enabled=enabled)
     dpg.bind_item_theme("letterbox_color_edit", 0 if enabled else "theme_locked_text")
@@ -98,12 +97,31 @@ def refresh_letterbox_controls():
   except Exception:
     blur_val = 20
   blur_val = max(4, min(120, blur_val))
+  if dpg.does_item_exist("letterbox_blur_group"):
+    dpg.configure_item("letterbox_blur_group", show=show_blur)
   if dpg.does_item_exist("letterbox_blur_slider"):
     dpg.configure_item("letterbox_blur_slider", show=show_blur, enabled=enabled)
     dpg.bind_item_theme("letterbox_blur_slider", 0 if enabled else "theme_locked_text")
     dpg.set_value("letterbox_blur_slider", blur_val)
   if dpg.does_item_exist("tooltip_letterbox_blur"):
     dpg.configure_item("tooltip_letterbox_blur", show=show_blur)
+
+  for tag in ("letterbox_blur_radius_label", "letterbox_blur_brightness_label"):
+    if dpg.does_item_exist(tag):
+      dpg.configure_item(tag, show=show_blur)
+
+  brightness_val = state.get("letterbox_blur_brightness", 100)
+  try:
+    brightness_val = int(brightness_val)
+  except Exception:
+    brightness_val = 100
+  brightness_val = max(20, min(100, brightness_val))
+  if dpg.does_item_exist("letterbox_blur_brightness_slider"):
+    dpg.configure_item("letterbox_blur_brightness_slider", show=show_blur, enabled=enabled)
+    dpg.bind_item_theme("letterbox_blur_brightness_slider", 0 if enabled else "theme_locked_text")
+    dpg.set_value("letterbox_blur_brightness_slider", brightness_val)
+  if dpg.does_item_exist("tooltip_letterbox_blur_brightness"):
+    dpg.configure_item("tooltip_letterbox_blur_brightness", show=show_blur)
 
 def on_letterbox_mode(sender, app_data):
   mode = _label_to_letterbox_mode(str(app_data))
@@ -135,6 +153,17 @@ def on_letterbox_blur(sender, app_data):
   set_state("letterbox_blur_radius", radius)
   if dpg.does_item_exist("letterbox_blur_slider"):
     dpg.set_value("letterbox_blur_slider", radius)
+  update_command()
+
+def on_letterbox_blur_brightness(sender, app_data):
+  try:
+    brightness = int(app_data)
+  except Exception:
+    brightness = get_state().get("letterbox_blur_brightness", 100)
+  brightness = max(20, min(100, int(brightness)))
+  set_state("letterbox_blur_brightness", brightness)
+  if dpg.does_item_exist("letterbox_blur_brightness_slider"):
+    dpg.set_value("letterbox_blur_brightness_slider", brightness)
   update_command()
 
 def on_custom_width(sender, app_data):

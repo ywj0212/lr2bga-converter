@@ -21,6 +21,9 @@
     "buffer_size": "バッファサイズ",
     "mux_rate": "MUX レート",
     "codec": "ビデオコーデック",
+    "letterbox_options": "レターボックス設定",
+    "letterbox_blur_radius": "ぼかし半径",
+    "letterbox_blur_brightness": "背景の明るさ",
     "estimated_size": "予想ファイルサイズ: {size}",
     "language": "言語"
   },
@@ -36,7 +39,8 @@
     "letterbox": "元映像と出力解像度のアスペクト比が異なる場合に、\n余白の埋め方を選択します。",
     "letterbox_disabled": "アスペクト比が一致しているため、\nレターボックス処理は不要です。",
     "letterbox_color": "レターボックス部分を塗りつぶす単色を選択します。",
-    "letterbox_blur": "ぼかし塗りつぶしは、入力映像を拡大してぼかしたものを背景に敷き、\nその上に元の映像を重ねます。\nスライダーでぼかし半径 (4～120) を調整してください。"
+    "letterbox_blur": "背景に使用するぼかしの半径を調整します (4～120)。値を大きくすると背景がより柔らかくなります。",
+    "letterbox_blur_brightness": "ぼかした背景の明るさを調整します (20%～100%)。値を下げると背景が暗くなります。"
   },
   "button": {
     "open": "開く",

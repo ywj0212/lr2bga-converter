@@ -20,6 +20,7 @@ global_state = {
   "letterbox_mode": "black",
   "letterbox_color": (255, 255, 255),
   "letterbox_blur_radius": 20,
+  "letterbox_blur_brightness": 100,
   "verbose": True,
   "auto_max_attempts": 0
 }

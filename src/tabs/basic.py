@@ -4,8 +4,20 @@ from src.states import set_state
 from src.cmdline import update_command, _fmt_estimated_size_value
 from src.ui_components import p, \
      make_lock_pair_float, make_lock_pair_int, apply_lock_pair
-from src.ui_callbacks import on_res_preset, on_float_value, on_int_value, \
-     on_fps_lock_toggle, on_buffer_lock_toggle, on_codec_change
+from src.ui_callbacks import (
+  on_res_preset,
+  on_float_value,
+  on_int_value,
+  on_fps_lock_toggle,
+  on_buffer_lock_toggle,
+  on_codec_change,
+  on_letterbox_mode,
+  on_letterbox_color,
+  on_letterbox_blur,
+  on_letterbox_blur_brightness,
+  refresh_letterbox_controls,
+  get_letterbox_mode_label,
+)
 from src.convert import run_convert
 from src import i18n
 
@@ -99,32 +111,55 @@ def init():
         )
         i18n.bind_items("letterbox_combo", "combo.letterbox_items")
 
-        with dpg.group(horizontal=True, tag="letterbox_extra_group"):
-          color_edit = dpg.add_color_edit(
-            tag="letterbox_color_edit",
-            default_value=(255, 255, 255, 255),
-            no_alpha=True,
-            input_mode=dpg.mvColorEdit_input_rgb,
-            width=220,
-            show=False,
-            callback=on_letterbox_color,
-          )
-          with dpg.tooltip(color_edit, tag="tooltip_letterbox_color"):
-            p("tooltip.letterbox_color")
+        with dpg.group(tag="letterbox_extra_group"):
+          with dpg.group(tag="letterbox_color_group", show=False):
+            color_edit = dpg.add_color_edit(
+              tag="letterbox_color_edit",
+              default_value=(255, 255, 255, 255),
+              no_alpha=True,
+              input_mode=dpg.mvColorEdit_input_rgb,
+              width=220,
+              show=True,
+              callback=on_letterbox_color,
+            )
+            with dpg.tooltip(color_edit, tag="tooltip_letterbox_color"):
+              p("tooltip.letterbox_color")
 
-          blur_slider = dpg.add_slider_int(
-            tag="letterbox_blur_slider",
-            min_value=4,
-            max_value=120,
-            default_value=20,
-            width=220,
-            show=False
-          )
-          with dpg.item_handler_registry() as h:
-            dpg.add_item_deactivated_after_edit_handler(callback=lambda sender: on_letterbox_blur(sender, dpg.get_value("letterbox_blur_slider")))
-          dpg.bind_item_handler_registry("letterbox_blur_slider", h)
-          with dpg.tooltip(blur_slider, tag="tooltip_letterbox_blur"):
-            p("tooltip.letterbox_blur")
+          with dpg.group(tag="letterbox_blur_group", show=False):
+            p("label.letterbox_blur_radius", tag="letterbox_blur_radius_label")
+            blur_slider = dpg.add_slider_int(
+              tag="letterbox_blur_slider",
+              min_value=4,
+              max_value=120,
+              default_value=20,
+              width=220,
+              show=True,
+            )
+            with dpg.item_handler_registry() as blur_handler:
+              dpg.add_item_deactivated_after_edit_handler(
+                callback=lambda sender: on_letterbox_blur(sender, dpg.get_value("letterbox_blur_slider"))
+              )
+            dpg.bind_item_handler_registry("letterbox_blur_slider", blur_handler)
+            with dpg.tooltip(blur_slider, tag="tooltip_letterbox_blur"):
+              p("tooltip.letterbox_blur")
+
+            p("label.letterbox_blur_brightness", tag="letterbox_blur_brightness_label")
+            brightness_slider = dpg.add_slider_int(
+              tag="letterbox_blur_brightness_slider",
+              min_value=20,
+              max_value=100,
+              default_value=100,
+              width=220,
+              show=True,
+              format="%d%%",
+            )
+            with dpg.item_handler_registry() as brightness_handler:
+              dpg.add_item_deactivated_after_edit_handler(
+                callback=lambda sender: on_letterbox_blur_brightness(sender, dpg.get_value("letterbox_blur_brightness_slider"))
+              )
+            dpg.bind_item_handler_registry("letterbox_blur_brightness_slider", brightness_handler)
+            with dpg.tooltip(brightness_slider, tag="tooltip_letterbox_blur_brightness"):
+              p("tooltip.letterbox_blur_brightness")
 
       with dpg.table_row(height=20):
         pass

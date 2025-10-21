@@ -21,6 +21,9 @@
     "buffer_size": "Buffer size",
     "mux_rate": "MUX rate",
     "codec": "Video codec",
+    "letterbox_options": "Letterbox fill",
+    "letterbox_blur_radius": "Blur radius",
+    "letterbox_blur_brightness": "Background brightness",
     "estimated_size": "Estimated file size: {size}",
     "language": "Language"
   },
@@ -36,7 +39,8 @@
     "letterbox": "Choose how to fill the letterbox area\nwhen the source and target aspect ratios differ.",
     "letterbox_disabled": "Aspect ratios match;\nno letterbox processing is required.",
     "letterbox_color": "Select the solid color used for the letterbox area.",
-    "letterbox_blur": "Blur fill enlarges and blurs a copy of the input video\nas the background and overlays the original on top.\nUse the slider to adjust the blur radius (4–120)."
+    "letterbox_blur": "Adjusts the blur radius of the background (4–120). Higher values produce a softer background.",
+    "letterbox_blur_brightness": "Adjusts the brightness of the blurred background (20%–100%). Lower values make it darker."
   },
   "button": {
     "open": "Open",
