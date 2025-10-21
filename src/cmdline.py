@@ -6,6 +6,86 @@ from src.env import path_native, get_ffmpeg_path, get_ffprobe_path
 from src.util import nfc, bytes_to_human
 from src import i18n
 
+LETTERBOX_TOLERANCE_PX = 2
+
+def is_letterbox_needed(state) -> bool:
+  try:
+    w = int(state.get("width", 0))
+    h = int(state.get("height", 0))
+    src_w = int(state.get("source_width", 0))
+    src_h = int(state.get("source_height", 0))
+  except Exception:
+    return True
+  if w <= 0 or h <= 0 or src_w <= 0 or src_h <= 0:
+    return True
+  scaled_w = round(h * src_w / src_h)
+  scaled_h = round(w * src_h / src_w)
+  return not (
+    abs(scaled_w - w) <= LETTERBOX_TOLERANCE_PX and
+    abs(scaled_h - h) <= LETTERBOX_TOLERANCE_PX
+  )
+
+def _normalize_letterbox_color(state) -> tuple[int, int, int]:
+  raw = state.get("letterbox_color", (0, 0, 0))
+  if not isinstance(raw, (list, tuple)):
+    raw = (0, 0, 0)
+  comps: list[float] = []
+  for idx in range(3):
+    try:
+      comps.append(float(raw[idx]))
+    except Exception:
+      comps.append(0.0)
+  max_val = max(comps) if comps else 0.0
+  scale = 255.0 if max_val <= 1.0001 else 1.0
+  result: list[int] = []
+  for value in comps:
+    try:
+      scaled = value * scale if scale == 255.0 else value
+    except Exception:
+      scaled = 0.0
+    result.append(max(0, min(255, int(round(scaled)))))
+  while len(result) < 3:
+    result.append(0)
+  return (result[0], result[1], result[2])
+
+def _build_letterbox_filter(state, fps: float) -> tuple[str, str, str | None]:
+  w = int(state.get("width", 0))
+  h = int(state.get("height", 0))
+  if w <= 0 or h <= 0:
+    return ("filter:v", f'scale={w}:{h},setsar=1,fps={fps}', None)
+
+  if not is_letterbox_needed(state):
+    vf = f'scale={w}:{h},setsar=1,fps={fps}'
+    return ("filter:v", vf, None)
+
+  mode = str(state.get("letterbox_mode", "black") or "black").lower()
+  if mode == "blur":
+    radius = state.get("letterbox_blur_radius", 20)
+    try:
+      radius = int(radius)
+    except Exception:
+      radius = 20
+    radius = max(4, min(120, radius))
+    vf = (
+      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=increase,'
+      f'crop={w}:{h}:(iw-ow)/2:(ih-oh)/2,boxblur={radius}[lb_bg];'
+      f'[0:v]scale={w}:{h}:force_original_aspect_ratio=decrease[lb_fg];'
+      f'[lb_bg][lb_fg]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2,'
+      f'setsar=1,fps={fps}[vout]'
+    )
+    return ("filter_complex", vf, "[vout]")
+
+  pad = f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2'
+  if mode == "solid":
+    r, g, b = _normalize_letterbox_color(state)
+    pad = f'{pad}:color=0x{r:02x}{g:02x}{b:02x}'
+
+  vf = (
+    f'scale={w}:{h}:force_original_aspect_ratio=decrease,'
+    f'{pad},setsar=1,fps={fps}'
+  )
+  return ("filter:v", vf, None)
+
 def ffprobe_duration_sec(path: str) -> float:
   if not path or not os.path.exists(path):
     return 0.0
@@ -21,6 +101,28 @@ def ffprobe_duration_sec(path: str) -> float:
     return float(out) if out else 0.0
   except Exception:
     return 0.0
+
+def ffprobe_video_resolution(path: str) -> tuple[int, int]:
+  if not path or not os.path.exists(path):
+    return (0, 0)
+  try:
+    cmd = [
+      get_ffprobe_path(),
+      "-v", "error",
+      "-select_streams", "v:0",
+      "-show_entries", "stream=width,height",
+      "-of", "csv=p=0:s=x",
+      path_native(path),
+    ]
+    out = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True).strip()
+    if not out:
+      return (0, 0)
+    if "x" in out:
+      w_str, h_str = out.split("x", 1)
+      return (int(float(w_str)), int(float(h_str)))
+  except Exception:
+    return (0, 0)
+  return (0, 0)
 
 def _fmt_estimated_size_value() -> str:
   """'{size}' 치환값을 동적으로 계산해 반환."""
@@ -57,24 +159,39 @@ def update_command():
   br = state["bitrate_k"]
   buf = state["buffer_k"] if not state["buffer_locked"] else 2900
   mux = state["mux_k"]
+  codec = state.get("codec", "MPEG1")
+  use_h264 = (codec == "H.264")
   inpath = path_native(state["input_path"] or "<input>")
   outdir = path_native(state["output_dir"] or "<out_dir>")
   outname = state["output_name"] or "output"
-  outpath = path_native(os.path.join(outdir, f"{outname}.mpg"))
+  ext = "mp4" if use_h264 else "mpg"
+  container = "mp4" if use_h264 else "mpeg"
+  outpath = path_native(os.path.join(outdir, f"{outname}.{ext}"))
 
-  vf = f'scale={w}:{h}:force_original_aspect_ratio=decrease,' \
-       f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}'
-  _cmd = (
-    f'{os.path.basename(get_ffmpeg_path())} -hide_banner -y -fflags +genpts \\\n'
-    f'  -i "{inpath}" \\\n'
-    f'  -filter:v "{vf}" \\\n'
-    f'  -r {fps} -fps_mode cfr \\\n'
-    f'  -c:v mpeg1video -pix_fmt yuv420p \\\n'
-    f'  -g 18 -keyint_min 1 -bf 2 -sc_threshold 40 \\\n'
+  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
+  lines = [
+    f'{os.path.basename(get_ffmpeg_path())} -hide_banner -y -fflags +genpts \\\n',
+    f'  -i "{inpath}" \\\n',
+    f'  -{filter_type} "{filter_expr}" \\\n',
+  ]
+  if map_output:
+    lines.append(f'  -map {map_output} \\\n')
+  lines.append(f'  -r {fps} -fps_mode cfr \\\n')
+  if use_h264:
+    lines.append('  -c:v libx264 -pix_fmt yuv420p \\\n')
+  else:
+    lines.append('  -c:v mpeg1video -pix_fmt yuv420p \\\n')
+  lines.append('  -g 18 -keyint_min 1 -bf 2 -sc_threshold 40 \\\n')
+  lines.append(
     f'  -b:v {br}k -minrate {br}k -maxrate {br}k -bufsize {buf}k \\\n'
-    f'  -muxrate {mux}k -an -f mpeg \\\n'
-    f'  "{outpath}"'
   )
+  if use_h264:
+    lines.append('  -movflags +faststart \\\n')
+    lines.append(f'  -an -f {container} \\\n')
+  else:
+    lines.append(f'  -muxrate {mux}k -an -f {container} \\\n')
+  lines.append(f'  "{outpath}"')
+  _cmd = "".join(lines)
   if dpg.does_item_exist("cmd_preview"):
     dpg.set_value("cmd_preview", nfc(_cmd))
   ffmpeg_cmd = _cmd
@@ -99,26 +216,38 @@ def build_ffmpeg_args(*, override_mux_k: int | None = None, override_outpath: st
   fps = state["fps"] if not state["fps_locked"] else 30
   br = state["bitrate_k"]
   buf = state["buffer_k"] if not state["buffer_locked"] else 2900
+  codec = state.get("codec", "MPEG1")
+  use_h264 = (codec == "H.264")
   mux = override_mux_k if override_mux_k is not None else state["mux_k"]
-  mux = quant50_up(int(mux))  # 50k 정렬
+  if not use_h264:
+    mux = quant50_up(int(mux))  # 50k 정렬
 
   inpath = state["input_path"]
   outdir = state["output_dir"]
   outname = state["output_name"] or "output"
-  outpath = override_outpath if override_outpath else os.path.join(outdir if outdir else ".", f"{outname}.mpg")
-
-  vf = f"scale={w}:{h}:force_original_aspect_ratio=decrease," \
-       f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}"
+  ext = "mp4" if use_h264 else "mpg"
+  outpath = override_outpath if override_outpath else os.path.join(outdir if outdir else ".", f"{outname}.{ext}")
 
   args = [
     get_ffmpeg_path(), "-hide_banner", "-y", "-fflags", "+genpts",
     "-i", path_native(inpath) if inpath else "IN.MP4",
-    "-filter:v", vf,
-    "-r", str(fps), "-fps_mode", "cfr",
-    "-c:v", "mpeg1video", "-pix_fmt", "yuv420p",
-    "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
-    "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k",
-    "-muxrate", f"{mux}k",
-    "-an", "-f", "mpeg", path_native(outpath)
   ]
+  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
+  args.extend([f"-{filter_type}", filter_expr])
+  if map_output:
+    args.extend(["-map", map_output])
+  args.extend(["-r", str(fps), "-fps_mode", "cfr",
+               "-c:v", "libx264" if use_h264 else "mpeg1video", "-pix_fmt", "yuv420p",
+               "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
+               "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k"])
+  if use_h264:
+    args.extend([
+      "-movflags", "+faststart",
+      "-an", "-f", "mp4", path_native(outpath)
+    ])
+  else:
+    args.extend([
+      "-muxrate", f"{mux}k",
+      "-an", "-f", "mpeg", path_native(outpath)
+    ])
   return args

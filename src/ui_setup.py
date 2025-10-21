@@ -71,3 +71,5 @@ def setup():
       dpg.add_theme_style(dpg.mvStyleVar_Alpha, 0.45, category=dpg.mvThemeCat_Core)
     with dpg.theme_component(dpg.mvText):
       dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))
+    with dpg.theme_component(dpg.mvCheckbox):
+      dpg.add_theme_color(dpg.mvThemeCol_Text, (150, 150, 150, 255))

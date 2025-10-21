@@ -4,8 +4,19 @@ from src.states import set_state
 from src.cmdline import update_command, _fmt_estimated_size_value
 from src.ui_components import p, \
      make_lock_pair_float, make_lock_pair_int, apply_lock_pair
-from src.ui_callbacks import on_res_preset, on_float_value, on_int_value, \
-     on_fps_lock_toggle, on_buffer_lock_toggle
+from src.ui_callbacks import (
+  on_res_preset,
+  on_float_value,
+  on_int_value,
+  on_fps_lock_toggle,
+  on_buffer_lock_toggle,
+  on_codec_change,
+  on_letterbox_mode,
+  on_letterbox_color,
+  on_letterbox_blur,
+  refresh_letterbox_controls,
+  get_letterbox_mode_label,
+)
 from src.convert import run_convert
 from src import i18n
 
@@ -64,7 +75,7 @@ def init():
           with dpg.tooltip(dpg.last_item()):
             p("tooltip.resolution")
         
-        dpg.add_combo(items=["256x256", "512x512", "640x480", "1280x720", "1920x1080", "Custom"],
+        dpg.add_combo(items=["256x256", "512x512", "640x480", "1280x720", "720p", "1080p", "Custom"],
                       default_value="512x512", width=180, callback=on_res_preset, tag="res_preset")
         # 콤보 items i18n 바인딩(언어 변경 시 항목 전체 갱신)
         i18n.bind_items("res_preset", "combo.res_preset_items")
@@ -72,14 +83,57 @@ def init():
         with dpg.group(horizontal=True):
           # Custom 폭/높이 (입력/표시 페어)
           dpg.add_input_int(tag="w_custom", default_value=512, width=120, step=1, min_value=1, min_clamped=True,
-                            callback=lambda s,a: (set_state("width", int(a)), update_command()))
+                            callback=lambda s,a: (set_state("width", int(a)), refresh_letterbox_controls(), update_command()))
           p("", tag="w_display", show=True)  # 초기엔 프리셋=락 → 표시용 보이기
           p("x")
           dpg.add_input_int(tag="h_custom", default_value=512, width=120, step=1, min_value=1, min_clamped=True,
-                            callback=lambda s,a: (set_state("height", int(a)), update_command()))
+                            callback=lambda s,a: (set_state("height", int(a)), refresh_letterbox_controls(), update_command()))
           p("", tag="h_display", show=True)
           dpg.bind_item_theme("w_display", "theme_locked_text")
           dpg.bind_item_theme("h_display", "theme_locked_text")
+
+      with dpg.table_row():
+        with dpg.group(horizontal=True, tag="letterbox_label_group"):
+          p("label.letterbox_options", tag="letterbox_label")
+          p("(?)", color=(150,150,150), tag="letterbox_help")
+          with dpg.tooltip(dpg.last_item(), tag="tooltip_letterbox_help"):
+            p("tooltip.letterbox")
+        with dpg.tooltip("letterbox_label_group", tag="tooltip_letterbox_disabled", show=False):
+          p("tooltip.letterbox_disabled", tag="tooltip_letterbox_disabled_text")
+
+        dpg.add_combo(
+          items=i18n.t_list("combo.letterbox_items") or ["Black", "Solid", "Blur"],
+          default_value=get_letterbox_mode_label(),
+          width=180,
+          callback=on_letterbox_mode,
+          tag="letterbox_combo",
+        )
+        i18n.bind_items("letterbox_combo", "combo.letterbox_items")
+
+        with dpg.group(horizontal=True, tag="letterbox_extra_group"):
+          color_edit = dpg.add_color_edit(
+            tag="letterbox_color_edit",
+            default_value=(0, 0, 0, 255),
+            no_alpha=True,
+            width=-1,
+            input_mode=dpg.mvColorEdit_input_int,
+            show=False,
+            callback=on_letterbox_color,
+          )
+          with dpg.tooltip(color_edit, tag="tooltip_letterbox_color"):
+            p("tooltip.letterbox_color")
+
+          blur_slider = dpg.add_slider_int(
+            tag="letterbox_blur_slider",
+            min_value=4,
+            max_value=120,
+            default_value=20,
+            width=-1,
+            show=False,
+            callback=on_letterbox_blur,
+          )
+          with dpg.tooltip(blur_slider, tag="tooltip_letterbox_blur"):
+            p("tooltip.letterbox_blur")
 
       with dpg.table_row():
         with dpg.group(horizontal=True):
@@ -116,25 +170,38 @@ def init():
         i18n.bind_label("buf_lock", "checkbox.lock")
 
       with dpg.table_row():
-        with dpg.group(horizontal=True):
-          p("label.mux_rate")
-          p("(?)", color=(150,150,150))
-          with dpg.tooltip(dpg.last_item()):
-            p("tooltip.mux")
+        with dpg.group(horizontal=True, tag="mux_label_group"):
+          p("label.mux_rate", tag="mux_label_text")
+          p("(?)", color=(150,150,150), tag="mux_label_help")
+          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_container"):
+            p("tooltip.mux", tag="tooltip_mux_text")
+        with dpg.tooltip("mux_label_group", tag="tooltip_mux_disabled", show=False):
+          p("tooltip.mux_disabled", tag="tooltip_mux_disabled_text")
 
         with dpg.group(horizontal=True):
           dpg.add_input_int(tag="mux_input", default_value=2100, width=130, step=50, min_value=1, min_clamped=True,
                             callback=on_int_value("mux_k", "mux_input"))
-          p("k")
-        with dpg.group(horizontal=True):  
+          p("k", tag="mux_unit_text")
+        with dpg.group(horizontal=True):
           dpg.add_checkbox(tag="mux_auto_chk",
                             label=i18n.t("checkbox.mux_auto"),
                             default_value=True,
                             callback=lambda s,a: set_state("mux_auto", bool(a)))
           i18n.bind_label("mux_auto_chk", "checkbox.mux_auto")
-          with dpg.tooltip(dpg.last_item()):
-            p("tooltip.mux_auto")
+          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_auto_container"):
+            p("tooltip.mux_auto", tag="tooltip_mux_auto_text")
     
+      with dpg.table_row():
+        with dpg.group(horizontal=True):
+          p("label.codec")
+          p("(?)", color=(150,150,150))
+          with dpg.tooltip(dpg.last_item()):
+            p("tooltip.codec", tag="tooltip_codec_text")
+        dpg.add_combo(items=["MPEG1", "H.264"],
+                      default_value="MPEG1", width=180, callback=on_codec_change, tag="codec_combo")
+        i18n.bind_items("codec_combo", "combo.codec_items")
+        dpg.add_spacer()
+
       with dpg.table_row():
         dpg.add_spacer()   # 1열
         dpg.add_spacer()   # 2열
@@ -172,3 +239,4 @@ def init():
   apply_lock_pair("h_custom", "h_display", True)
   apply_lock_pair("fps_input", "fps_display", True)
   apply_lock_pair("buf_input", "buf_display", True)
+  refresh_letterbox_controls()

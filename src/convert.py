@@ -17,10 +17,11 @@ probe_paths: set[str] = set()
 current_outpath: str = ""
 encoding_active = False
 
-def make_temp_outpath(base_dir: str | None, outname: str, mux_k: int) -> str:
+def make_temp_outpath(base_dir: str | None, outname: str, mux_k: int, ext: str) -> str:
+  suffix = f".{outname}.probe_mux{mux_k}.tmp.{ext}"
   if base_dir and os.path.isdir(base_dir):
-    return os.path.join(base_dir, f".{outname}.probe_mux{mux_k}.tmp.mpg")
-  return os.path.join(tempfile.gettempdir(), f"{outname}.probe_mux{mux_k}.tmp.mpg")
+    return os.path.join(base_dir, suffix)
+  return os.path.join(tempfile.gettempdir(), suffix)
 
 def safe_remove(path: str):
   try:
@@ -35,9 +36,12 @@ def ffmpeg_attempt_mux(mux_k: int, itr: int, *, final_output: bool) -> tuple[boo
   inpath = global_state["input_path"]
   outdir = global_state["output_dir"]
   outname = global_state["output_name"] or "output"
+  codec = global_state.get("codec", "MPEG1")
+  use_h264 = (codec == "H.264")
+  ext = "mp4" if use_h264 else "mpg"
 
-  outpath = os.path.join(outdir if outdir else ".", f"{outname}.mpg") if final_output \
-            else make_temp_outpath(outdir, outname, mux_k)
+  outpath = os.path.join(outdir if outdir else ".", f"{outname}.{ext}") if final_output \
+            else make_temp_outpath(outdir, outname, mux_k, ext)
 
   args = build_ffmpeg_args(override_mux_k=mux_k, override_outpath=outpath)
   dur = ffprobe_duration_sec(inpath)
@@ -50,13 +54,18 @@ def ffmpeg_attempt_mux(mux_k: int, itr: int, *, final_output: bool) -> tuple[boo
     cmd2 = base_args[:-1] + ["-progress", "pipe:1", "-nostats", base_args[-1]]
 
   if not final_output:
-    ui_map.log_append(f"[TRY] MUX={quant50_up(mux_k)}k")
-    ui_map.set_service_msg("msg.searching_mux", itr=itr, mux=mux_k)
+    if not use_h264:
+      ui_map.log_append(f"[TRY] MUX={quant50_up(mux_k)}k")
+      ui_map.set_service_msg("msg.searching_mux", itr=itr, mux=mux_k)
   else:
-    ui_map.log_append(f"[OUTPUT] MUX={quant50_up(mux_k)}k")
+    if use_h264:
+      ui_map.log_append("[OUTPUT] Codec=H.264")
+    else:
+      ui_map.log_append(f"[OUTPUT] MUX={quant50_up(mux_k)}k")
     ui_map.set_service_msg("msg.working")
 
-  dpg.set_value("mux_input", mux_k)
+  if not use_h264 and dpg.does_item_exist("mux_input"):
+    dpg.set_value("mux_input", mux_k)
   ui_map.set_progress(0.0)
 
   if cancel_requested:
@@ -67,7 +76,7 @@ def ffmpeg_attempt_mux(mux_k: int, itr: int, *, final_output: bool) -> tuple[boo
   underflow_regex = re.compile(r"buffer underflow", re.IGNORECASE)
 
   current_outpath = outpath
-  if not final_output:
+  if not final_output and not use_h264:
     probe_paths.add(outpath)
 
   proc = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
@@ -138,6 +147,8 @@ def ffmpeg_attempt_mux(mux_k: int, itr: int, *, final_output: bool) -> tuple[boo
     return (False, False, outpath)
 
 def find_min_safe_mux(start_mux_k: int, *, max_mux_k: int = 20000, max_attempts: int = 12) -> int | None:
+  if global_state.get("codec", "MPEG1") == "H.264":
+    return None
   start_mux_k = quant50_up(int(start_mux_k))
   attempts = 0
   unlimited = (max_attempts is None) or (int(max_attempts) <= 0)
@@ -250,12 +261,36 @@ def run_convert():
     ui_map.set_convert_buttons_active(True)
 
     try:
-      start_mux = quant50_up(int(global_state["mux_k"]))
+      codec = global_state.get("codec", "MPEG1")
+      use_h264 = (codec == "H.264")
+      mux_value = int(global_state.get("mux_k", 0))
+      start_mux = quant50_up(mux_value) if not use_h264 else mux_value
       auto = bool(dpg.get_value("mux_auto_chk")) if dpg.does_item_exist("mux_auto_chk") else bool(global_state.get("mux_auto", True))
-      max_mux_k = quant50_up(int(global_state.get("bitrate_k", 0)) * 4)
+      auto = auto and not use_h264
+      max_mux_k = quant50_up(int(global_state.get("bitrate_k", 0)) * 4) if not use_h264 else 0
       max_attempts = int(global_state.get("auto_max_attempts", 0))
 
-      if auto:
+      if use_h264:
+        update_command()
+        ui_map.log_append("[FINAL] Generating file with codec H.264")
+        ok, uf, outpath = ffmpeg_attempt_mux(start_mux, 0, final_output=True)
+        if cancel_requested:
+          return
+        if uf:
+          ui_map.set_service_msg("msg.fail_underflow")
+          ui_map.log_append("[FAIL] Underflow occurred!")
+        elif not ok:
+          ui_map.set_service_msg("msg.fail")
+          ui_map.log_append("[FAIL] Failed to generate file")
+        else:
+          try:
+            size_bytes = os.path.getsize(outpath) if outpath and os.path.exists(outpath) else 0
+            ui_map.set_service_msg("msg.done", size=(bytes_to_human, size_bytes))
+          except Exception:
+            ui_map.set_service_msg("msg.done_nofs")
+          ui_map.log_append("[DONE] Successfully generated file")
+
+      elif auto:
         best = find_min_safe_mux(start_mux_k=start_mux, max_mux_k=max_mux_k, max_attempts=max_attempts)
         if cancel_requested:
           return

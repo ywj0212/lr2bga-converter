@@ -14,6 +14,12 @@ global_state = {
   "buffer_k": 2900,
   "mux_k": 2100,
   "mux_auto": True,
+  "codec": "MPEG1",
+  "source_width": 0,
+  "source_height": 0,
+  "letterbox_mode": "black",
+  "letterbox_color": (0, 0, 0),
+  "letterbox_blur_radius": 20,
   "verbose": True,
   "auto_max_attempts": 0
 }

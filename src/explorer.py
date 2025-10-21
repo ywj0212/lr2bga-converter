@@ -5,8 +5,9 @@ from tkinter import filedialog
 
 from src.env import IS_MAC
 from src.util import nfc
-from src.states import set_state
-from src.cmdline import update_command, update_estimated_size
+from src.states import set_state, get_state
+from src.cmdline import update_command, update_estimated_size, ffprobe_video_resolution
+from src.ui_callbacks import on_res_preset, refresh_letterbox_controls
 
 def _mac_choose_file(prompt="원본 파일 선택"):
   # Finder 네이티브 파일 선택
@@ -52,6 +53,15 @@ def open_file_native(sender=None, app_data=None, user_data=None):
   out_dir = os.path.dirname(path)
   dpg.set_value("out_dir", nfc(out_dir))
   set_state("output_dir", out_dir)
+
+  src_w, src_h = ffprobe_video_resolution(path)
+  set_state("source_width", src_w)
+  set_state("source_height", src_h)
+  refresh_letterbox_controls()
+
+  preset = get_state().get("res_preset")
+  if preset in ("720p", "1080p"):
+    on_res_preset("res_preset", preset)
 
   # 프리뷰/예상 사이즈 갱신
   update_command()
