@@ -104,7 +104,7 @@ def init():
             tag="letterbox_color_edit",
             default_value=(0, 0, 0, 255),
             no_alpha=True,
-            width=-1,
+            width=220,
             show=False,
             callback=on_letterbox_color,
           )
@@ -116,12 +116,15 @@ def init():
             min_value=4,
             max_value=120,
             default_value=20,
-            width=-1,
+            width=220,
             show=False,
             callback=on_letterbox_blur,
           )
           with dpg.tooltip(blur_slider, tag="tooltip_letterbox_blur"):
             p("tooltip.letterbox_blur")
+
+      with dpg.table_row(height=20):
+        pass
 
       with dpg.table_row():
         with dpg.group(horizontal=True):
@@ -177,6 +180,9 @@ def init():
           with dpg.tooltip(dpg.last_item()):
             p("tooltip.mux_auto", tag="tooltip_mux_auto_text")
     
+      with dpg.table_row(height=20):
+        pass
+
       with dpg.table_row():
         with dpg.group(horizontal=True):
           p("label.codec")

@@ -32,8 +32,11 @@
     "mux": "Increase it until no buffer underflow occurs.",
     "mux_disabled": "Not used for H.264 output.",
     "mux_auto": "When enabled, the entered MUX rate is used as the starting value.",
-    "mux_auto_disabled": "Not required for H.264 output.",
-    "codec": "Use MPEG-1 for LR2 video playback."
+    "codec": "Use MPEG-1 for LR2 video playback.",
+    "letterbox": "Choose how to fill the letterbox area\nwhen the source and target aspect ratios differ.",
+    "letterbox_disabled": "Aspect ratios match;\nno letterbox processing is required.",
+    "letterbox_color": "Select the solid color used for the letterbox area.",
+    "letterbox_blur": "Blur fill enlarges and blurs a copy of the input video\nas the background and overlays the original on top.\nUse the slider to adjust the blur radius (4–120)."
   },
   "button": {
     "open": "Open",
