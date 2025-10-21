@@ -102,8 +102,9 @@ def init():
         with dpg.group(horizontal=True, tag="letterbox_extra_group"):
           color_edit = dpg.add_color_edit(
             tag="letterbox_color_edit",
-            default_value=(0, 0, 0, 255),
+            default_value=(255, 255, 255, 255),
             no_alpha=True,
+            input_mode=dpg.mvColorEdit_input_rgb,
             width=220,
             show=False,
             callback=on_letterbox_color,
@@ -117,9 +118,11 @@ def init():
             max_value=120,
             default_value=20,
             width=220,
-            show=False,
-            callback=on_letterbox_blur,
+            show=False
           )
+          with dpg.item_handler_registry() as h:
+            dpg.add_item_deactivated_after_edit_handler(callback=lambda sender: on_letterbox_blur(sender, dpg.get_value("letterbox_blur_slider")))
+          dpg.bind_item_handler_registry("letterbox_blur_slider", h)
           with dpg.tooltip(blur_slider, tag="tooltip_letterbox_blur"):
             p("tooltip.letterbox_blur")
 
