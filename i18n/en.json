@@ -26,7 +26,7 @@
   },
   "tooltip": {
     "output_name": "The file name without an extension.",
-    "resolution": "LR2SD is designed to run at 256x256, but it also works fine up to 512x512.\nbeatoraja’s intended resolution is 720p.",
+    "resolution": "LR2SD works properly at 256x256 and 512x512.\nBeatoraja is intended to run at 720p resolution.\nIf the aspect ratio does not match, the empty space will be filled\naccording to the method specified in the next menu.",
     "fps": "Use 30 fps to ensure playback on LR2SD.",
     "buffer": "An appropriate buffer size is required to ensure playback on LR2.",
     "mux": "Increase it until no buffer underflow occurs.",
@@ -66,7 +66,7 @@
     "size_dash": "—"
   },
   "about": {
-    "title": "LR2 BMS BGA Converter",
+    "title": "BGA Converter for LR2 BMS Player",
     "desc": "A simple tool to convert videos to MPEG-1 (YUV420p, 30fps, CFR) optimized for LR2.",
     "license": "License",
     "license_program": "GNU General Public License v3.0",
