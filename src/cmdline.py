@@ -159,15 +159,14 @@ def update_command():
   container = "mp4" if use_h264 else "mpeg"
   outpath = path_native(os.path.join(outdir, f"{outname}.{ext}"))
 
-  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
+  vf = f'scale={w}:{h}:force_original_aspect_ratio=decrease,' \
+       f'pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}'
   lines = [
     f'{os.path.basename(get_ffmpeg_path())} -hide_banner -y -fflags +genpts \\\n',
     f'  -i "{inpath}" \\\n',
-    f'  -{filter_type} "{filter_expr}" \\\n',
+    f'  -filter:v "{vf}" \\\n',
+    f'  -r {fps} -fps_mode cfr \\\n',
   ]
-  if map_output:
-    lines.append(f'  -map {map_output} \\\n')
-  lines.append(f'  -r {fps} -fps_mode cfr \\\n')
   if use_h264:
     lines.append('  -c:v libx264 -pix_fmt yuv420p \\\n')
   else:
@@ -219,18 +218,18 @@ def build_ffmpeg_args(*, override_mux_k: int | None = None, override_outpath: st
   ext = "mp4" if use_h264 else "mpg"
   outpath = override_outpath if override_outpath else os.path.join(outdir if outdir else ".", f"{outname}.{ext}")
 
+  vf = f"scale={w}:{h}:force_original_aspect_ratio=decrease," \
+       f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={fps}"
+
   args = [
     get_ffmpeg_path(), "-hide_banner", "-y", "-fflags", "+genpts",
     "-i", path_native(inpath) if inpath else "IN.MP4",
+    "-filter:v", vf,
+    "-r", str(fps), "-fps_mode", "cfr",
+    "-c:v", "libx264" if use_h264 else "mpeg1video", "-pix_fmt", "yuv420p",
+    "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
+    "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k",
   ]
-  filter_type, filter_expr, map_output = _build_letterbox_filter(state, fps)
-  args.extend([f"-{filter_type}", filter_expr])
-  if map_output:
-    args.extend(["-map", map_output])
-  args.extend(["-r", str(fps), "-fps_mode", "cfr",
-               "-c:v", "libx264" if use_h264 else "mpeg1video", "-pix_fmt", "yuv420p",
-               "-g", "18", "-keyint_min", "1", "-bf", "2", "-sc_threshold", "40",
-               "-b:v", f"{br}k", "-minrate", f"{br}k", "-maxrate", f"{br}k", "-bufsize", f"{buf}k"])
   if use_h264:
     args.extend([
       "-movflags", "+faststart",

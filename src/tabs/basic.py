@@ -4,19 +4,8 @@ from src.states import set_state
 from src.cmdline import update_command, _fmt_estimated_size_value
 from src.ui_components import p, \
      make_lock_pair_float, make_lock_pair_int, apply_lock_pair
-from src.ui_callbacks import (
-  on_res_preset,
-  on_float_value,
-  on_int_value,
-  on_fps_lock_toggle,
-  on_buffer_lock_toggle,
-  on_codec_change,
-  on_letterbox_mode,
-  on_letterbox_color,
-  on_letterbox_blur,
-  refresh_letterbox_controls,
-  get_letterbox_mode_label,
-)
+from src.ui_callbacks import on_res_preset, on_float_value, on_int_value, \
+     on_fps_lock_toggle, on_buffer_lock_toggle, on_codec_change
 from src.convert import run_convert
 from src import i18n
 
@@ -169,25 +158,23 @@ def init():
         i18n.bind_label("buf_lock", "checkbox.lock")
 
       with dpg.table_row():
-        with dpg.group(horizontal=True, tag="mux_label_group"):
-          p("label.mux_rate", tag="mux_label_text")
-          p("(?)", color=(150,150,150), tag="mux_label_help")
-          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_container"):
+        with dpg.group(horizontal=True):
+          p("label.mux_rate")
+          p("(?)", color=(150,150,150))
+          with dpg.tooltip(dpg.last_item()):
             p("tooltip.mux", tag="tooltip_mux_text")
-        with dpg.tooltip("mux_label_group", tag="tooltip_mux_disabled", show=False):
-          p("tooltip.mux_disabled", tag="tooltip_mux_disabled_text")
 
         with dpg.group(horizontal=True):
           dpg.add_input_int(tag="mux_input", default_value=2100, width=130, step=50, min_value=1, min_clamped=True,
                             callback=on_int_value("mux_k", "mux_input"))
           p("k", tag="mux_unit_text")
-        with dpg.group(horizontal=True):
+        with dpg.group(horizontal=True):  
           dpg.add_checkbox(tag="mux_auto_chk",
                             label=i18n.t("checkbox.mux_auto"),
                             default_value=True,
                             callback=lambda s,a: set_state("mux_auto", bool(a)))
           i18n.bind_label("mux_auto_chk", "checkbox.mux_auto")
-          with dpg.tooltip(dpg.last_item(), tag="tooltip_mux_auto_container"):
+          with dpg.tooltip(dpg.last_item()):
             p("tooltip.mux_auto", tag="tooltip_mux_auto_text")
     
       with dpg.table_row():

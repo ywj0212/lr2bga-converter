@@ -235,6 +235,38 @@ def on_codec_change(sender, app_data):
 
   update_command()
 
+def _bind_mux_tooltips(mux_key: str, auto_key: str):
+  if dpg.does_item_exist("tooltip_mux_text"):
+    dpg.set_value("tooltip_mux_text", i18n.t(mux_key))
+    i18n.bind_value("tooltip_mux_text", mux_key)
+  if dpg.does_item_exist("tooltip_mux_auto_text"):
+    dpg.set_value("tooltip_mux_auto_text", i18n.t(auto_key))
+    i18n.bind_value("tooltip_mux_auto_text", auto_key)
+
+def on_codec_change(sender, app_data):
+  codec = str(app_data)
+  set_state("codec", codec)
+  use_h264 = (codec == "H.264")
+
+  targets = ("mux_input", "mux_auto_chk")
+  for item in targets:
+    if dpg.does_item_exist(item):
+      dpg.configure_item(item, enabled=not use_h264)
+      dpg.bind_item_theme(item, "theme_locked_text" if use_h264 else 0)
+
+  if dpg.does_item_exist("mux_unit_text"):
+    if use_h264:
+      dpg.bind_item_theme("mux_unit_text", "theme_locked_text")
+    else:
+      dpg.bind_item_theme("mux_unit_text", 0)
+
+  if use_h264:
+    _bind_mux_tooltips("tooltip.mux_disabled", "tooltip.mux_auto_disabled")
+  else:
+    _bind_mux_tooltips("tooltip.mux", "tooltip.mux_auto")
+
+  update_command()
+
 def on_float_value(key, item_tag):
   def _cb(sender, app_data):
     try:

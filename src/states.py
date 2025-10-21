@@ -17,9 +17,6 @@ global_state = {
   "codec": "MPEG1",
   "source_width": 0,
   "source_height": 0,
-  "letterbox_mode": "black",
-  "letterbox_color": (0, 0, 0),
-  "letterbox_blur_radius": 20,
   "verbose": True,
   "auto_max_attempts": 0
 }
