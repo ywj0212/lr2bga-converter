@@ -10,17 +10,17 @@ hidden = collect_submodules("dearpygui")
 
 # 데이터/바이너리 경로
 datas = [
-    ("./i18n/*.json", "i18n"),
-    ("./fonts/*", "fonts"),
+    ("i18n/*.json", "i18n"),
+    ("fonts/*", "fonts"),
 ]
 binaries = [
-    ("./bin/ffmpeg.exe", "."),
-    ("./bin/ffprobe.exe", "."),
+    ("bin/ffmpeg.exe", "bin"),
+    ("bin/ffprobe.exe", "bin"),
 ]
 
 a = Analysis(
     ["main.py"],
-    pathex=[os.path.abspath(".")],
+    pathex=[],
     binaries=binaries,
     datas=datas,
     hiddenimports=hidden + ["tkinter"],  # 파일선택 대화상자 대비
