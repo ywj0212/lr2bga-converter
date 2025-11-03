@@ -29,7 +29,7 @@ security find-identity -p basic -v
   ...
      N valid identities found
 ```
-2.2. `Yonhwa Video Editor (MacOS).spec` (line 39)
+2.2. `lr2bga_mac.spec`
 ```python
 codesign_identity="Developer ID Application: JOHN DOE (XXXXXXXXXX)",
 ```
@@ -46,12 +46,12 @@ user@mac:/ $ pyinstaller lr2bga_mac.spec
 ```bash
 user@mac:/ $ cd dist
 user@mac:/dist $ codesign --verify --verbose=4 ./LR2BGA-Converter.app   
-./Yonhwa Video Editor.app: valid on disk
-./Yonhwa Video Editor.app: satisfies its Designated Requirement
+./LR2BGA-Converter.app: valid on disk
+./LR2BGA-Converter.app: satisfies its Designated Requirement
 user@mac:/dist $ spctl -a -vvv -t install ./LR2BGA-Converter.app 
-./Yonhwa Video Editor.app: rejected
+./LR2BGA-Converter.app: rejected
 source=Unnotarized Developer ID
-origin=Developer IxD Application: JOHN DOE (XXXXXXXXXX)
+origin=Developer ID Application: JOHN DOE (XXXXXXXXXX)
 ```
 3.2. 공증
 ```bash
@@ -64,7 +64,7 @@ user@mac:/dist $ xcrun stapler staple LR2BGA-Converter.app
 ```bash
 user@mac:/dist $ xcrun stapler validate LR2BGA-Converter.app
 user@mac:/dist $ spctl -a -vvv -t install ./LR2BGA-Converter.app 
-./Yonhwa Video Editor.app: accepted
+./LR2BGA-Converter.app: accepted
 source=Notarized Developer ID
 origin=Developer ID Application: JOHN DOE (XXXXXXXXXX)
 ```
