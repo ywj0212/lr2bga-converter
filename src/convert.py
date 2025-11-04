@@ -8,7 +8,7 @@ from src.cmdline import build_ffmpeg_args, ffprobe_duration_sec, quant50_up, \
      update_command
 
 import src.ui_map as ui_map
-from src.util import bytes_to_human
+from src.util import bytes_to_human, nfc
 
 # ★ 모듈 전역 상태 (여기에서 선언)
 current_proc = None
@@ -79,7 +79,7 @@ def ffmpeg_attempt_mux(mux_k: int, itr: int, *, final_output: bool) -> tuple[boo
   if not final_output and not use_h264:
     probe_paths.add(outpath)
 
-  proc = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+  proc = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, shell=False, encoding="utf-8")
   current_proc = proc
   underflow_hit = False
 
@@ -352,6 +352,7 @@ def run_convert():
   threading.Thread(target=worker, daemon=True).start()
 
 def run_convert_custom():
+  ui_map.log_clear()
   if not dpg.does_item_exist("cmd_preview"):
     ui_map.log_append("[ERROR] No cmd_preview")
     return
@@ -371,6 +372,7 @@ def run_convert_custom():
 
     try:
       args = shlex.split(cmdline, posix=(not IS_WINDOWS))
+      args = [str(a).strip() for a in args if str(a).strip()]
       if not args:
         ui_map.log_append("[ERROR] No parsed args")
         return
@@ -421,7 +423,7 @@ def run_convert_custom():
       prog_regex = re.compile(r"out_time=(\d+):(\d+):(\d+\.?\d*)")
       underflow_regex = re.compile(r"buffer underflow", re.IGNORECASE)
 
-      proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+      proc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1, encoding="utf-8", shell=False)
       current_proc = proc
       underflow_hit = False
 

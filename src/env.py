@@ -1,5 +1,7 @@
 # env.py
 import platform, os, sys, stat
+from src.util import nfc
+from pathlib import Path
 
 IS_MAC = platform.system() == "Darwin"
 IS_WINDOWS = platform.system() == "Windows"
@@ -53,8 +55,7 @@ def get_ffprobe_path() -> str:
   return "ffprobe.exe" if IS_WINDOWS else "ffprobe"
 
 def path_native(p: str) -> str:
-  """윈도우에서는 백슬래시로 정규화, 그 외는 원본 유지."""
-  try:
-    return os.path.normpath(p) if IS_WINDOWS else p
-  except Exception:
-    return p
+  p = nfc(p)
+  p = os.path.expanduser(os.path.expandvars(p))
+  p = os.path.normpath(p)
+  return str(Path(p).resolve(strict=False))
