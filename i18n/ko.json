@@ -81,6 +81,6 @@
     "license_notice_title": "동봉 또는 사용 라이브러리 고지:",
     "license_notice": "• ffmpeg / ffprobe - GNU General Public License v2.0\n• Dear PyGui - MIT License\n• Fonts\n  • PretendardJP - SIL Open Font License\n  • D2Coding - OFL(Open Font License)",
     "github": "GitHub: https://github.com/ywj0212/lr2bga-converter",
-    "version": "Version: v1.0.0"
+    "version": "Version: v1.0.1"
   }
 }
